@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, ChevronDown, ExternalLink, HelpCircle, MapPin, Plus, Search, Send, Trash2, X } from "lucide-react";
-import { ESTADOS, MUNICIPIOS_POR_ESTADO } from "@/lib/catalogos";
+import { ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, ChevronDown, ClipboardPlus, ExternalLink, FilePenLine, HelpCircle, LoaderCircle, MapPin, Plus, Search, Send, Trash2, X } from "lucide-react";
+
+type MunicipioPermitido = { clave: string; nombre: string };
+type Acceso = {
+  correo: string;
+  estado: { clave: string; nombre: string };
+  municipios: MunicipioPermitido[];
+};
+type Vista = "menu" | "agregar" | "consultar" | "modificar" | "baja";
 
 type Plantel = {
   id: string; nombre: string; direccion: string; latitud: string; longitud: string;
@@ -52,6 +59,10 @@ const errorEnlaceGoogleMaps = (valor: string) => {
 };
 
 export default function Home() {
+  const [acceso, setAcceso] = useState<Acceso | null>(null);
+  const [cargandoAcceso, setCargandoAcceso] = useState(true);
+  const [errorAcceso, setErrorAcceso] = useState("");
+  const [vista, setVista] = useState<Vista>("menu");
   const [paso, setPaso] = useState(0);
   const [nombreResponsable, setNombreResponsable] = useState("");
   const [correoResponsable, setCorreoResponsable] = useState("");
@@ -64,7 +75,39 @@ export default function Home() {
   const [finalizado, setFinalizado] = useState(false);
   const [mostrarErrores, setMostrarErrores] = useState(false);
 
-  const opcionesMunicipios = useMemo(() => MUNICIPIOS_POR_ESTADO[estado] ?? [], [estado]);
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("token")?.trim() ?? "";
+    if (!token) {
+      setErrorAcceso("Este enlace no contiene una clave de acceso válida.");
+      setCargandoAcceso(false);
+      return;
+    }
+    const validar = async () => {
+      try {
+        const response = await fetch("/api/access", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data?.valido) throw new Error(data?.mensaje || "El enlace no es válido.");
+        setAcceso({ correo: data.correo, estado: data.estado, municipios: data.municipios ?? [] });
+        setCorreoResponsable(data.correo);
+        setEstado(data.estado.clave);
+      } catch (error) {
+        setErrorAcceso(error instanceof Error ? error.message : "No fue posible validar el enlace.");
+      } finally {
+        setCargandoAcceso(false);
+      }
+    };
+    validar();
+  }, []);
+
+  const opcionesMunicipios = useMemo(() => acceso?.municipios.map((item) => item.nombre) ?? [], [acceso]);
+  const claveMunicipio = useMemo(
+    () => new Map(acceso?.municipios.map((item) => [item.nombre, item.clave]) ?? []),
+    [acceso],
+  );
   const municipios = useMemo(() => Object.keys(planteles), [planteles]);
   const municipiosFiltrados = useMemo(() => {
     const consulta = busquedaMunicipio.trim().toLocaleLowerCase("es-MX");
@@ -74,10 +117,6 @@ export default function Home() {
     );
   }, [busquedaMunicipio, opcionesMunicipios]);
   const cantidadPlanteles = Object.values(planteles).reduce((total, lista) => total + lista.length, 0);
-
-  const elegirEstado = (clave: string) => {
-    setEstado(clave); setPlanteles({}); setMunicipioActivo(""); setBusquedaMunicipio(""); setMostrarErrores(false);
-  };
 
   const alternarMunicipio = (municipio: string) => {
     setPlanteles((actuales) => {
@@ -173,9 +212,11 @@ export default function Home() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombreResponsable, correoResponsable,
-          estado: ESTADOS.find((item) => item.clave === estado),
+          token: new URLSearchParams(window.location.search).get("token"),
+          tipoSolicitud: "Alta",
+          estado: acceso?.estado,
           municipios: municipios.map((municipio) => ({
-            clave: String(opcionesMunicipios.indexOf(municipio) + 1).padStart(3, "0"),
+            clave: claveMunicipio.get(municipio),
             nombre: municipio,
             planteles: planteles[municipio].map((plantel) => ({
               nombrePlantel: plantel.nombre,
@@ -217,13 +258,90 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const volverAlMenu = () => {
+    setVista("menu");
+    setPaso(0);
+    setMensaje("");
+    setMostrarErrores(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (cargandoAcceso) return (
+    <main className="app-shell flex min-h-screen items-center justify-center p-5">
+      <section className="glass-card access-state" aria-live="polite">
+        <LoaderCircle className="loading-icon" size={42} />
+        <p className="eyebrow">Portal de planteles PLS</p>
+        <h1>Validando acceso</h1>
+        <p className="lead">Estamos comprobando su enlace seguro.</p>
+      </section>
+    </main>
+  );
+
+  if (!acceso) return (
+    <main className="app-shell flex min-h-screen items-center justify-center p-5">
+      <section className="glass-card access-state">
+        <div className="access-error"><X size={34} /></div>
+        <p className="eyebrow">Acceso no disponible</p>
+        <h1>No fue posible ingresar</h1>
+        <p className="lead">{errorAcceso}</p>
+        <p className="access-help">Solicite a la Dirección General de Bachillerato un nuevo enlace de acceso.</p>
+      </section>
+    </main>
+  );
+
+  if (vista === "menu") return (
+    <main className="app-shell min-h-screen px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-6xl">
+        <header className="brand-header">
+          <div className="brand-mark"><span className="dgb-logo" role="img" aria-label="DGB" /></div>
+          <div><p className="eyebrow">Dirección General de Bachillerato</p><h1>GESTIÓN DE PLANTELES PLS</h1></div>
+        </header>
+        <section className="form-card portal-menu">
+          <div className="portal-welcome">
+            <div>
+              <p className="eyebrow">Acceso autorizado</p>
+              <h2>¿Qué desea realizar?</h2>
+              <p className="section-copy">Seleccione una operación para los planteles de <strong>{acceso.estado.nombre}</strong>.</p>
+            </div>
+            <div className="access-summary"><span>{acceso.correo}</span><strong>{acceso.estado.nombre}</strong></div>
+          </div>
+          <div className="operation-grid">
+            <button type="button" onClick={() => setVista("agregar")}><span><ClipboardPlus /></span><strong>Agregar plantel(es)</strong><small>Registre uno o varios planteles para revisión.</small><ArrowRight /></button>
+            <button type="button" onClick={() => setVista("consultar")}><span><Search /></span><strong>Consultar plantel(es)</strong><small>Revise los planteles registrados en su estado.</small><ArrowRight /></button>
+            <button type="button" onClick={() => setVista("modificar")}><span><FilePenLine /></span><strong>Solicitar modificación</strong><small>Proponga cambios sobre un plantel vigente.</small><ArrowRight /></button>
+            <button type="button" onClick={() => setVista("baja")}><span><Trash2 /></span><strong>Solicitar baja</strong><small>Solicite una baja definitiva, por Etapa 2 u otro motivo.</small><ArrowRight /></button>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+
+  if (vista !== "agregar") return (
+    <main className="app-shell min-h-screen px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-4xl">
+        <header className="brand-header">
+          <div className="brand-mark"><span className="dgb-logo" role="img" aria-label="DGB" /></div>
+          <div><p className="eyebrow">Dirección General de Bachillerato</p><h1>GESTIÓN DE PLANTELES PLS</h1></div>
+        </header>
+        <section className="glass-card pending-view">
+          <Building2 size={42} />
+          <p className="eyebrow">{vista === "consultar" ? "Consulta de planteles" : vista === "modificar" ? "Solicitud de modificación" : "Solicitud de baja"}</p>
+          <h2>La sección está lista para conectarse</h2>
+          <p className="lead">En el siguiente paso enlazaremos esta operación con la base vigente de planteles.</p>
+          <button type="button" className="secondary-button" onClick={volverAlMenu}><ArrowLeft size={17} /> Volver al menú</button>
+        </section>
+      </div>
+    </main>
+  );
+
   if (finalizado) return (
     <main className="app-shell flex min-h-screen items-center justify-center p-5">
       <section className="glass-card max-w-xl text-center">
         <div className="success-icon"><CheckCircle2 size={38} /></div>
         <p className="eyebrow">Registro concluido</p><h1>¡Muchas gracias!</h1>
-        <p className="lead">La información de sus planteles fue enviada correctamente.</p>
+        <p className="lead">La solicitud de alta fue enviada correctamente y quedó pendiente de revisión.</p>
         <div className="folio-box">Planteles registrados: <strong>{cantidadPlanteles}</strong></div>
+        <button type="button" className="secondary-button success-return" onClick={volverAlMenu}>Volver al menú</button>
       </section>
     </main>
   );
@@ -233,7 +351,7 @@ export default function Home() {
       <div className="mx-auto max-w-6xl">
         <header className="brand-header">
           <div className="brand-mark"><span className="dgb-logo" role="img" aria-label="DGB" /></div>
-          <div><p className="eyebrow">Dirección General de Bachillerato</p><h1>REGISTRO DE PLANTELES CECATIS</h1></div>
+          <div><p className="eyebrow">Dirección General de Bachillerato</p><h1>ALTA DE PLANTELES PLS</h1></div>
         </header>
         <section className="form-card">
           <nav className="steps" aria-label="Progreso del formulario">
@@ -242,15 +360,15 @@ export default function Home() {
           <form className={mostrarErrores ? "show-validation" : ""} onSubmit={(event) => event.preventDefault()} noValidate>
             {paso === 0 && <section className="panel narrow-panel">
               <p className="eyebrow">Paso 1 de 4</p><h2>Datos de la persona responsable</h2>
-              <p className="section-copy">Usaremos estos datos únicamente para identificar el registro.</p>
+              <p className="section-copy">El correo y el estado provienen de su enlace autorizado.</p>
               <label>Nombre completo <b>*</b><input required aria-invalid={mostrarErrores && !nombreResponsable.trim()} value={nombreResponsable} onChange={(e) => setNombreResponsable(e.target.value)} placeholder="Ej. Juan Torres" autoComplete="name" /><span className="field-error">Falta capturar el nombre completo.</span></label>
-              <label>Correo electrónico <b>*</b><input required type="email" aria-invalid={mostrarErrores && !correoResponsable.includes("@")} value={correoResponsable} onChange={(e) => setCorreoResponsable(e.target.value)} placeholder="nombre@dgb.sems.gob.mx" autoComplete="email" /><span className="field-error">Capture un correo electrónico válido.</span></label>
+              <label>Correo autorizado<input readOnly type="email" value={correoResponsable} autoComplete="email" className="locked-field" /></label>
             </section>}
 
             {paso === 1 && <section className="panel">
-              <p className="eyebrow">Paso 2 de 4</p><h2>Seleccione estado y municipios</h2>
+              <p className="eyebrow">Paso 2 de 4</p><h2>Seleccione los municipios</h2>
               <div className="two-columns">
-                <label>Estado <b>*</b><select required aria-invalid={mostrarErrores && !estado} value={estado} onChange={(e) => elegirEstado(e.target.value)}><option value="">Seleccione un estado</option>{ESTADOS.map((item) => <option key={item.clave} value={item.clave}>{item.nombre}</option>)}</select><span className="field-error">Falta seleccionar el estado.</span></label>
+                <label>Estado autorizado<input readOnly value={acceso.estado.nombre} className="locked-field" /></label>
                 <div><span className="field-title">Municipios seleccionados</span><div tabIndex={-1} aria-invalid={mostrarErrores && municipios.length === 0} className={`selection-summary ${municipios.length === 0 ? "empty" : ""}`}>{municipios.length === 0 ? "0 seleccionados" : `${municipios.length} seleccionado${municipios.length === 1 ? "" : "s"}`}</div>{mostrarErrores && municipios.length === 0 && <span className="field-error visible">Seleccione al menos un municipio.</span>}</div>
               </div>
               {estado && <>
@@ -329,7 +447,7 @@ export default function Home() {
             {paso === 3 && <section className="panel">
               <p className="eyebrow">Paso 4 de 4</p><h2>Revisión del registro</h2>
               <p className="section-copy">Verifique toda la información antes de enviarla. Despliegue cada municipio para consultar sus planteles o regresar a modificarlos.</p>
-              <div className="review-contact"><strong>{nombreResponsable}</strong><span>{correoResponsable}</span><span>{ESTADOS.find((item) => item.clave === estado)?.nombre}</span></div>
+              <div className="review-contact"><strong>{nombreResponsable}</strong><span>{correoResponsable}</span><span>{acceso.estado.nombre}</span></div>
               <div className="review-list">{municipios.map((municipio) => <details className="review-municipality" key={municipio}>
                 <summary><span><MapPin size={18} /><strong>{municipio}</strong></span><span>{planteles[municipio]?.length ?? 0} plantel(es) <ChevronDown size={18} /></span></summary>
                 <div className="review-municipality-body">
@@ -365,7 +483,7 @@ export default function Home() {
 
             {mensaje && <div className="error-message" role="alert">{mensaje}</div>}
             <footer className="form-actions">
-              {paso > 0 && <button type="button" className="secondary-button" onClick={() => setPaso((actual) => actual - 1)}><ArrowLeft size={17} /> Regresar</button>}
+              {paso > 0 ? <button type="button" className="secondary-button" onClick={() => setPaso((actual) => actual - 1)}><ArrowLeft size={17} /> Regresar</button> : <button type="button" className="secondary-button" onClick={volverAlMenu}><ArrowLeft size={17} /> Menú principal</button>}
               <div className="spacer" />
               {paso < 3 ? <button key="continuar" type="button" className="primary-button" onClick={avanzar}>{paso === 2 ? (municipios.indexOf(municipioActivo) < municipios.length - 1 ? "Siguiente municipio" : "Revisar registro") : "Continuar"} <ArrowRight size={17} /></button> : <button key="enviar" type="button" className="primary-button" onClick={enviar} disabled={enviando}>{enviando ? "Enviando…" : <><Send size={17} /> Enviar registro</>}</button>}
             </footer>
