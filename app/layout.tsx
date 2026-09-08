@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./menu-scale.css";
 import ModificationBridge from "./modification-bridge";
 
 export const metadata: Metadata = {
