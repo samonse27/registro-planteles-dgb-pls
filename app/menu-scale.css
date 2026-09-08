@@ -1,21 +1,31 @@
 /* Ajustes exclusivos del menú principal y mensajes de acceso para pantallas medianas y grandes. */
 @media (min-width: 761px) {
+  .brand-header .eyebrow {
+    font-size: .95rem;
+    line-height: 1.25;
+  }
+
+  .brand-header h1 {
+    font-size: clamp(1.9rem, 2.6vw, 2.15rem);
+  }
+
   .portal-menu {
-    padding: clamp(38px, 4.2vw, 64px);
+    padding: clamp(36px, 4vw, 58px);
   }
 
   .portal-welcome {
-    gap: 34px;
-    margin-bottom: 34px;
+    gap: 32px;
+    margin-bottom: 32px;
   }
 
   .portal-welcome h2 {
-    font-size: clamp(2rem, 2.5vw, 2.65rem);
-    line-height: 1.12;
+    font-size: clamp(2rem, 2.2vw, 2.125rem);
+    line-height: 1.15;
   }
 
   .portal-welcome .section-copy {
-    font-size: 1.04rem;
+    font-size: 1rem;
+    line-height: 1.55;
   }
 
   .portal-menu .eyebrow {
@@ -23,47 +33,47 @@
   }
 
   .access-summary {
-    padding: 16px 20px;
+    padding: 15px 19px;
     border-radius: 15px;
-    font-size: .95rem;
+    font-size: .92rem;
   }
 
   .operation-grid {
-    gap: 18px;
+    gap: 17px;
   }
 
   .operation-grid > button {
-    min-height: 178px;
-    grid-template-columns: 58px 1fr auto;
-    column-gap: 18px;
-    padding: 28px;
+    min-height: 166px;
+    grid-template-columns: 54px 1fr auto;
+    column-gap: 17px;
+    padding: 26px;
     border-radius: 20px;
   }
 
   .operation-grid > button > span {
-    width: 58px;
-    height: 58px;
-    border-radius: 16px;
+    width: 54px;
+    height: 54px;
+    border-radius: 15px;
   }
 
   .operation-grid > button > span svg {
-    width: 26px;
-    height: 26px;
+    width: 25px;
+    height: 25px;
   }
 
   .operation-grid > button > strong {
-    font-size: 1.18rem;
+    font-size: 1.15rem;
   }
 
   .operation-grid > button > small {
-    margin-top: 7px;
-    font-size: .95rem;
-    line-height: 1.5;
+    margin-top: 6px;
+    font-size: .96rem;
+    line-height: 1.48;
   }
 
   .operation-grid > button > svg {
-    width: 22px;
-    height: 22px;
+    width: 21px;
+    height: 21px;
   }
 
   .access-state {
@@ -102,12 +112,5 @@
     margin-top: 28px;
     font-size: 1.08rem;
     line-height: 1.55;
-  }
-}
-
-@media (min-width: 1100px) {
-  .portal-menu {
-    transform: scale(1.04);
-    transform-origin: top center;
   }
 }
