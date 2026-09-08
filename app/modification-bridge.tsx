@@ -10,8 +10,18 @@ export default function ModificationBridge() {
       if (!button) return;
 
       const text = button.textContent?.toLowerCase() ?? "";
-      let ruta = "";
 
+      if (
+        text.includes("volver al menú") &&
+        document.body.textContent?.includes("Registro concluido")
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        window.location.href = `${window.location.pathname}${window.location.search}`;
+        return;
+      }
+
+      let ruta = "";
       if (text.includes("solicitar modificación")) ruta = "/modificar";
       if (text.includes("solicitar baja")) ruta = "/baja";
       if (!ruta) return;
