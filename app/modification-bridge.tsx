@@ -32,9 +32,8 @@ export default function ModificationBridge() {
       boton.dataset.monitoreo = "true";
       boton.innerHTML = `
         <span aria-hidden="true">▥</span>
-        <strong>Calidad de la información</strong>
+        <strong>Avance de la información</strong>
         <small>Monitoree la completitud nacional por estado, plantel y campo.</small>
-        <span aria-hidden="true">→</span>
       `;
       grid.appendChild(boton);
     };
