@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Registro de Planteles CECATIS",
-  description: "Formulario para registrar planteles CECATIS por estado y municipio.",
+  title: "Gestión de Planteles PLS | DGB",
+  description: "Portal para registrar y gestionar planteles PLS por estado.",
   other: {
     "codex-preview": "development",
   },
