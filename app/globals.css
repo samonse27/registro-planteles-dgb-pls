@@ -59,6 +59,7 @@ button,input,select { font:inherit; }
 .section-copy { margin:0 0 28px; color:#765966; line-height:1.6; }
 label,.field-title { display:flex; flex-direction:column; gap:8px; color:#56303e; font-size:.9rem; font-weight:700; }
 label b { color:#9b2247; }
+.optional-label { display:inline; margin-left:6px; color:#8a737b; font-size:.72rem; font-weight:500; }
 input,select { width:100%; border:1px solid #d7b8c3; border-radius:11px; background:white; padding:12px 13px; color:#35131f; outline:none; transition:.2s; }
 input:focus,select:focus { border-color:#a57f2c; box-shadow:0 0 0 3px rgba(165,127,44,.16); }
 .field-error { display:none; color:#a61b16; font-size:.78rem; font-weight:650; line-height:1.35; }
