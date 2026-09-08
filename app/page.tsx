@@ -11,6 +11,17 @@ type Acceso = {
   municipios: MunicipioPermitido[];
 };
 type Vista = "menu" | "agregar" | "consultar" | "modificar" | "baja";
+type PlantelConsulta = {
+  plantelId?: string; municipio?: string; nombrePlantel?: string; direccion?: string;
+  latitud?: string; longitud?: string; codigoPostal?: string; linkGoogleMaps?: string;
+  aulasDidacticas?: string | number; capacidadPorAula?: string | number;
+  capacidadInstalada?: string | number; computadoras?: string | number;
+  agua?: boolean | null; luz?: boolean | null; internet?: boolean | null; drenaje?: boolean | null;
+  equipoComputo?: boolean | null; laboratorio?: boolean | null; banos?: boolean | null;
+  espacioAdministrativo?: boolean | null; movilidad?: string; horario?: string;
+  activo?: boolean; fechaActualizacion?: string; motivoActual?: string;
+  estadoRevision?: string; versionActual?: string | number;
+};
 
 type Plantel = {
   id: string; nombre: string; direccion: string; latitud: string; longitud: string;
@@ -76,6 +87,9 @@ export default function Home() {
   const [mensaje, setMensaje] = useState("");
   const [finalizado, setFinalizado] = useState(false);
   const [mostrarErrores, setMostrarErrores] = useState(false);
+  const [plantelesConsulta, setPlantelesConsulta] = useState<PlantelConsulta[]>([]);
+  const [cargandoConsulta, setCargandoConsulta] = useState(false);
+  const [errorConsulta, setErrorConsulta] = useState("");
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token")?.trim() ?? "";
@@ -105,6 +119,30 @@ export default function Home() {
     validar();
   }, []);
 
+  useEffect(() => {
+    if (vista !== "consultar" || !acceso) return;
+    const consultar = async () => {
+      setCargandoConsulta(true);
+      setErrorConsulta("");
+      try {
+        const token = new URLSearchParams(window.location.search).get("token");
+        const response = await fetch("/api/planteles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data?.valido) throw new Error(data?.mensaje || "No fue posible consultar los planteles.");
+        setPlantelesConsulta(Array.isArray(data.planteles) ? data.planteles : []);
+      } catch (error) {
+        setErrorConsulta(error instanceof Error ? error.message : "No fue posible consultar los planteles.");
+      } finally {
+        setCargandoConsulta(false);
+      }
+    };
+    consultar();
+  }, [vista, acceso]);
+
   const opcionesMunicipios = useMemo(() => acceso?.municipios.map((item) => item.nombre) ?? [], [acceso]);
   const claveMunicipio = useMemo(
     () => new Map(acceso?.municipios.map((item) => [item.nombre, item.clave]) ?? []),
@@ -119,6 +157,11 @@ export default function Home() {
     );
   }, [busquedaMunicipio, opcionesMunicipios]);
   const cantidadPlanteles = Object.values(planteles).reduce((total, lista) => total + lista.length, 0);
+  const consultaPorMunicipio = useMemo(() => plantelesConsulta.reduce<Record<string, PlantelConsulta[]>>((grupos, plantel) => {
+    const municipio = plantel.municipio?.trim() || "Municipio pendiente";
+    (grupos[municipio] ??= []).push(plantel);
+    return grupos;
+  }, {}), [plantelesConsulta]);
 
   const alternarMunicipio = (municipio: string) => {
     setPlanteles((actuales) => {
@@ -311,6 +354,54 @@ export default function Home() {
     </main>
   );
 
+  if (vista === "consultar") return (
+    <main className="app-shell min-h-screen px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-5xl">
+        <header className="brand-header">
+          <div className="brand-mark"><span className="dgb-logo" role="img" aria-label="DGB" /></div>
+          <div><p className="eyebrow">Dirección General de Bachillerato</p><h1>CONSULTA DE PLANTELES PLS</h1></div>
+        </header>
+        <section className="form-card consultation-view">
+          <div className="portal-welcome">
+            <div><p className="eyebrow">Información registrada</p><h2>Planteles de {acceso.estado.nombre}</h2><p className="section-copy">Esta pantalla es únicamente de consulta. Los datos pendientes pueden completarse mediante una solicitud de modificación.</p></div>
+            <div className="access-summary"><span>{acceso.correo}</span><strong>{plantelesConsulta.length} plantel(es)</strong></div>
+          </div>
+          {cargandoConsulta && <div className="consultation-state"><LoaderCircle className="loading-icon" size={34} /><p>Consultando planteles…</p></div>}
+          {!cargandoConsulta && errorConsulta && <div className="error-message" role="alert">{errorConsulta}</div>}
+          {!cargandoConsulta && !errorConsulta && plantelesConsulta.length === 0 && <div className="consultation-state"><Building2 size={40} /><h3>Aún no hay planteles registrados</h3><p>Cuando se aprueben o registren planteles para este estado, aparecerán aquí.</p></div>}
+          {!cargandoConsulta && !errorConsulta && Object.entries(consultaPorMunicipio).map(([municipio, lista]) => <details className="review-municipality" key={municipio} open>
+            <summary><span><MapPin size={18} /><strong>{municipio}</strong></span><span>{lista.length} plantel(es) <ChevronDown size={18} /></span></summary>
+            <div className="review-municipality-body">{lista.map((plantel, indice) => <article className="review-plant" key={plantel.plantelId || `${municipio}-${indice}`}>
+              <div className="consultation-title"><h3>Plantel {indice + 1}: {plantel.nombrePlantel?.trim() || "Sin nombre"}</h3><span>{plantel.estadoRevision || "Pendiente de revisión"}</span></div>
+              <dl className="review-data-grid">
+                <div><dt>PlantelID</dt><dd>{plantel.plantelId || "Pendiente"}</dd></div>
+                <div><dt>Activo</dt><dd>{plantel.activo === true ? "Sí" : plantel.activo === false ? "No" : "Pendiente de completar"}</dd></div>
+                <div className="wide"><dt>Dirección</dt><dd>{String(plantel.direccion ?? "").trim() || "Pendiente de completar"}</dd></div>
+                <div><dt>Latitud</dt><dd>{String(plantel.latitud ?? "").trim() || "Pendiente de completar"}</dd></div>
+                <div><dt>Longitud</dt><dd>{String(plantel.longitud ?? "").trim() || "Pendiente de completar"}</dd></div>
+                <div><dt>Código Postal</dt><dd>{String(plantel.codigoPostal ?? "").trim() || "Pendiente de completar"}</dd></div>
+                <div><dt>Aulas didácticas</dt><dd>{plantel.aulasDidacticas ?? "Pendiente de completar"}</dd></div>
+                <div><dt>Capacidad por aula</dt><dd>{plantel.capacidadPorAula ?? "Pendiente de completar"}</dd></div>
+                <div><dt>Capacidad instalada</dt><dd>{plantel.capacidadInstalada ?? "Pendiente de completar"}</dd></div>
+                <div><dt>Computadoras</dt><dd>{plantel.computadoras ?? "Pendiente de completar"}</dd></div>
+                <div><dt>Agua</dt><dd>{respuestaSiNo(plantel.agua ?? null)}</dd></div><div><dt>Luz</dt><dd>{respuestaSiNo(plantel.luz ?? null)}</dd></div>
+                <div><dt>Internet</dt><dd>{respuestaSiNo(plantel.internet ?? null)}</dd></div><div><dt>Drenaje</dt><dd>{respuestaSiNo(plantel.drenaje ?? null)}</dd></div>
+                <div><dt>Aulas de cómputo</dt><dd>{respuestaSiNo(plantel.equipoComputo ?? null)}</dd></div><div><dt>Laboratorio</dt><dd>{respuestaSiNo(plantel.laboratorio ?? null)}</dd></div>
+                <div><dt>Baños</dt><dd>{respuestaSiNo(plantel.banos ?? null)}</dd></div><div><dt>Espacio administrativo</dt><dd>{respuestaSiNo(plantel.espacioAdministrativo ?? null)}</dd></div>
+                <div><dt>Movilidad</dt><dd>{String(plantel.movilidad ?? "").trim() || "Pendiente de completar"}</dd></div><div><dt>Horario</dt><dd>{String(plantel.horario ?? "").trim() || "Pendiente de completar"}</dd></div>
+                <div><dt>Última actualización</dt><dd>{plantel.fechaActualizacion ? new Date(plantel.fechaActualizacion).toLocaleString("es-MX") : "Sin actualización"}</dd></div>
+                <div><dt>Versión</dt><dd>{plantel.versionActual ?? "Pendiente"}</dd></div>
+                <div className="wide"><dt>Motivo actual</dt><dd>{plantel.motivoActual?.trim() || "Sin motivo registrado"}</dd></div>
+                <div className="wide"><dt>Enlace de Google Maps</dt><dd>{plantel.linkGoogleMaps?.trim() ? <a href={plantel.linkGoogleMaps} target="_blank" rel="noopener noreferrer">Abrir ubicación <ExternalLink size={14} /></a> : "Pendiente de completar"}</dd></div>
+              </dl>
+            </article>)}</div>
+          </details>)}
+          <footer className="form-actions"><button type="button" className="secondary-button" onClick={volverAlMenu}><ArrowLeft size={17} /> Volver al menú</button></footer>
+        </section>
+      </div>
+    </main>
+  );
+
   if (vista !== "agregar") return (
     <main className="app-shell min-h-screen px-4 py-8 md:px-8">
       <div className="mx-auto max-w-4xl">
@@ -320,7 +411,7 @@ export default function Home() {
         </header>
         <section className="glass-card pending-view">
           <Building2 size={42} />
-          <p className="eyebrow">{vista === "consultar" ? "Consulta de planteles" : vista === "modificar" ? "Solicitud de modificación" : "Solicitud de baja"}</p>
+          <p className="eyebrow">{vista === "modificar" ? "Solicitud de modificación" : "Solicitud de baja"}</p>
           <h2>La sección está lista para conectarse</h2>
           <p className="lead">En el siguiente paso enlazaremos esta operación con la base vigente de planteles.</p>
           <button type="button" className="secondary-button" onClick={volverAlMenu}><ArrowLeft size={17} /> Volver al menú</button>
