@@ -1,5 +1,11 @@
 /* Ajustes de escala para menú, formularios y mensajes de acceso en pantallas medianas y grandes. */
 @media (min-width: 761px) {
+  /* Igualar la presencia visual del formulario CECATIS: aprovechar mucho más el ancho de escritorio. */
+  .app-shell > .mx-auto {
+    width: min(100%, 1500px);
+    max-width: 1500px !important;
+  }
+
   .brand-header {
     gap: 24px;
     margin-bottom: 26px;
@@ -20,7 +26,7 @@
   }
 
   .portal-menu {
-    width: min(100%, 1240px);
+    width: 100%;
     margin-inline: auto;
     padding: clamp(48px, 4.8vw, 74px);
   }
@@ -88,47 +94,47 @@
     height: 25px;
   }
 
-  /* Formularios: tipografía claramente mayor en escritorio. */
+  /* Formularios: ancho y tipografía equivalentes visualmente a CECATIS. */
   .form-card:not(.portal-menu) {
-    width: min(100%, 1280px);
+    width: 100%;
     margin-inline: auto;
   }
 
   .steps {
-    padding: 26px 38px;
+    padding: 28px 42px;
   }
 
   .step {
     gap: 14px;
-    font-size: 1.18rem;
+    font-size: 1.2rem;
   }
 
   .step span {
     width: 42px;
     height: 42px;
-    font-size: 1.04rem;
+    font-size: 1.05rem;
   }
 
   .step small {
-    font-size: 1.16rem;
+    font-size: 1.18rem;
   }
 
   .panel {
-    padding: 46px clamp(48px, 5.2vw, 84px) 38px;
-    min-height: 460px;
+    padding: 50px clamp(58px, 5.5vw, 96px) 42px;
+    min-height: 470px;
   }
 
   .narrow-panel {
-    max-width: 960px;
+    max-width: 1120px;
   }
 
   .panel .eyebrow {
-    font-size: 1.05rem;
+    font-size: 1.08rem;
     margin-bottom: 14px;
   }
 
   .panel h2 {
-    font-size: clamp(2.5rem, 3vw, 2.95rem);
+    font-size: clamp(2.55rem, 3vw, 3rem);
     line-height: 1.13;
     margin-bottom: 14px;
   }
@@ -176,9 +182,17 @@
     font-size: 1.06rem;
   }
 
+  .municipality-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    max-height: 380px;
+  }
+
   .municipality-grid button,
   .municipality-tabs button {
+    min-height: 58px;
     font-size: 1.12rem;
+    padding: 13px 15px;
   }
 
   .plant-card {
@@ -217,7 +231,7 @@
   }
 
   .form-actions {
-    padding: 24px clamp(48px, 5.2vw, 84px);
+    padding: 24px clamp(58px, 5.5vw, 96px);
   }
 
   .primary-button,
@@ -233,7 +247,7 @@
   }
 
   .consultation-view {
-    padding: 44px;
+    padding: 48px 58px;
   }
 
   .consultation-title h3 {
