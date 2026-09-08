@@ -95,7 +95,9 @@ export async function POST(request: Request) {
     }
 
     const planteles = Array.isArray(data.planteles)
-      ? data.planteles.map(normalizarPlantel)
+      ? data.planteles
+          .map(normalizarPlantel)
+          .filter((plantel) => plantel.activo !== false)
       : [];
 
     return NextResponse.json({
