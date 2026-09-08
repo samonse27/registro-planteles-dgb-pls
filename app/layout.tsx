@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ModificationBridge from "./modification-bridge";
 
 export const metadata: Metadata = {
   title: "Gestión de Planteles PLS | DGB",
@@ -20,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased"><ModificationBridge />{children}</body>
     </html>
   );
 }
