@@ -30,10 +30,31 @@ export default function ModificationBridge() {
       const boton = document.createElement("button");
       boton.type = "button";
       boton.dataset.monitoreo = "true";
+      boton.setAttribute("aria-label", "Avance de información");
+      boton.style.display = "flex";
+      boton.style.flexDirection = "column";
+      boton.style.alignItems = "center";
+      boton.style.justifyContent = "center";
+      boton.style.textAlign = "center";
+      boton.style.gap = "8px";
+      boton.style.paddingRight = "64px";
+      boton.style.paddingLeft = "64px";
+
       boton.innerHTML = `
-        <span aria-hidden="true">▥</span>
-        <strong>Avance de la información</strong>
-        <small>Monitoree la completitud nacional por estado, plantel y campo.</small>
+        <span aria-hidden="true" style="margin:0 auto 2px;">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20V10" />
+            <path d="M10 20V4" />
+            <path d="M16 20v-7" />
+            <path d="M22 20V8" />
+          </svg>
+        </span>
+        <strong style="align-self:center;font-size:1.08rem;line-height:1.25;">Avance de información</strong>
+        <small style="align-self:center;margin-top:0;max-width:520px;text-align:center;">Monitoree la completitud nacional por estado, plantel y campo.</small>
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:22px;top:50%;transform:translateY(-50%);color:#a57f2c;">
+          <path d="M5 12h14" />
+          <path d="m13 6 6 6-6 6" />
+        </svg>
       `;
       grid.appendChild(boton);
     };
