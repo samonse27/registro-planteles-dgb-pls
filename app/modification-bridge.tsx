@@ -4,6 +4,8 @@ import { useEffect } from "react";
 
 export default function ModificationBridge() {
   useEffect(() => {
+    let puedeVerMonitoreo = false;
+
     const resaltarPendientes = () => {
       const esAlta = document.body.textContent?.includes("ALTA DE PLANTELES PLS");
       if (!esAlta) return;
@@ -20,9 +22,50 @@ export default function ModificationBridge() {
       });
     };
 
-    const observador = new MutationObserver(resaltarPendientes);
+    const agregarMonitoreo = () => {
+      if (!puedeVerMonitoreo) return;
+      const grid = document.querySelector<HTMLElement>(".operation-grid");
+      if (!grid || grid.querySelector('[data-monitoreo="true"]')) return;
+
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.dataset.monitoreo = "true";
+      boton.innerHTML = `
+        <span aria-hidden="true">▥</span>
+        <strong>Calidad de la información</strong>
+        <small>Monitoree la completitud nacional por estado, plantel y campo.</small>
+        <span aria-hidden="true">→</span>
+      `;
+      grid.appendChild(boton);
+    };
+
+    const prepararPermisoMonitoreo = async () => {
+      const token = new URLSearchParams(window.location.search).get("token")?.trim() ?? "";
+      if (!token) return;
+
+      try {
+        const response = await fetch("/api/access", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await response.json();
+        puedeVerMonitoreo = response.ok && data?.valido === true && data?.puedeVerMonitoreo === true;
+        agregarMonitoreo();
+      } catch {
+        puedeVerMonitoreo = false;
+      }
+    };
+
+    const actualizarInterfaz = () => {
+      resaltarPendientes();
+      agregarMonitoreo();
+    };
+
+    const observador = new MutationObserver(actualizarInterfaz);
     observador.observe(document.body, { childList: true, subtree: true, characterData: true });
-    resaltarPendientes();
+    actualizarInterfaz();
+    prepararPermisoMonitoreo();
 
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
@@ -42,6 +85,7 @@ export default function ModificationBridge() {
       }
 
       let ruta = "";
+      if (button.dataset.monitoreo === "true") ruta = "/monitoreo";
       if (text.includes("solicitar modificación")) ruta = "/modificar";
       if (text.includes("solicitar baja")) ruta = "/baja";
       if (!ruta) return;
