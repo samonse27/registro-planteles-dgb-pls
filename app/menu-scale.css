@@ -1,293 +1,297 @@
 /* Ajustes de escala para menú, formularios y mensajes de acceso en pantallas medianas y grandes. */
 @media (min-width: 761px) {
   .brand-header {
-    gap: 22px;
-    margin-bottom: 24px;
+    gap: 24px;
+    margin-bottom: 26px;
   }
 
   .brand-mark {
-    width: 142px;
-    height: 78px;
+    width: 150px;
+    height: 82px;
   }
 
   .brand-header .eyebrow {
-    font-size: 1.02rem;
+    font-size: 1.16rem;
     line-height: 1.25;
   }
 
   .brand-header h1 {
-    font-size: clamp(2.1rem, 2.9vw, 2.45rem);
+    font-size: clamp(2.35rem, 3vw, 2.7rem);
   }
 
   .portal-menu {
-    width: min(100%, 1180px);
+    width: min(100%, 1240px);
     margin-inline: auto;
-    padding: clamp(44px, 4.6vw, 70px);
+    padding: clamp(48px, 4.8vw, 74px);
   }
 
   .portal-welcome {
-    gap: 38px;
-    margin-bottom: 38px;
+    gap: 40px;
+    margin-bottom: 40px;
   }
 
   .portal-welcome h2 {
-    font-size: clamp(2.2rem, 2.55vw, 2.5rem);
+    font-size: clamp(2.45rem, 2.7vw, 2.8rem);
     line-height: 1.12;
   }
 
   .portal-welcome .section-copy {
-    font-size: 1.08rem;
+    font-size: 1.22rem;
     line-height: 1.6;
   }
 
   .portal-menu .eyebrow {
-    font-size: .9rem;
-  }
-
-  .access-summary {
-    padding: 17px 22px;
-    border-radius: 16px;
     font-size: 1rem;
   }
 
+  .access-summary {
+    padding: 18px 24px;
+    border-radius: 16px;
+    font-size: 1.12rem;
+  }
+
   .operation-grid {
-    gap: 20px;
+    gap: 22px;
   }
 
   .operation-grid > button {
-    min-height: 188px;
-    grid-template-columns: 62px 1fr auto;
-    column-gap: 20px;
-    padding: 30px;
+    min-height: 198px;
+    grid-template-columns: 66px 1fr auto;
+    column-gap: 22px;
+    padding: 32px;
     border-radius: 22px;
   }
 
   .operation-grid > button > span {
-    width: 62px;
-    height: 62px;
-    border-radius: 17px;
+    width: 66px;
+    height: 66px;
+    border-radius: 18px;
   }
 
   .operation-grid > button > span svg {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
   }
 
   .operation-grid > button > strong {
-    font-size: 1.28rem;
+    font-size: 1.42rem;
   }
 
   .operation-grid > button > small {
     margin-top: 8px;
-    font-size: 1.04rem;
+    font-size: 1.16rem;
     line-height: 1.5;
   }
 
   .operation-grid > button > svg {
-    width: 23px;
-    height: 23px;
+    width: 25px;
+    height: 25px;
   }
 
-  /* Formularios: mayor legibilidad sin perder la vista completa en escritorio. */
+  /* Formularios: tipografía claramente mayor en escritorio. */
   .form-card:not(.portal-menu) {
-    width: min(100%, 1220px);
+    width: min(100%, 1280px);
     margin-inline: auto;
   }
 
   .steps {
-    padding: 24px 34px;
+    padding: 26px 38px;
   }
 
   .step {
-    gap: 12px;
-    font-size: 1.03rem;
+    gap: 14px;
+    font-size: 1.18rem;
   }
 
   .step span {
-    width: 36px;
-    height: 36px;
-    font-size: .9rem;
+    width: 42px;
+    height: 42px;
+    font-size: 1.04rem;
   }
 
   .step small {
-    font-size: 1rem;
+    font-size: 1.16rem;
   }
 
   .panel {
-    padding: 42px clamp(42px, 5vw, 76px) 34px;
-    min-height: 440px;
+    padding: 46px clamp(48px, 5.2vw, 84px) 38px;
+    min-height: 460px;
   }
 
   .narrow-panel {
-    max-width: 860px;
+    max-width: 960px;
   }
 
   .panel .eyebrow {
-    font-size: .9rem;
-    margin-bottom: 12px;
+    font-size: 1.05rem;
+    margin-bottom: 14px;
   }
 
   .panel h2 {
-    font-size: clamp(2.1rem, 2.7vw, 2.55rem);
-    line-height: 1.15;
-    margin-bottom: 12px;
+    font-size: clamp(2.5rem, 3vw, 2.95rem);
+    line-height: 1.13;
+    margin-bottom: 14px;
   }
 
   .panel .section-copy {
-    font-size: 1.12rem;
+    font-size: 1.3rem;
     line-height: 1.55;
-    margin-bottom: 30px;
+    margin-bottom: 34px;
   }
 
   label,
   .field-title {
-    font-size: 1.02rem;
-    gap: 10px;
+    font-size: 1.18rem;
+    gap: 11px;
   }
 
   input,
   select {
-    min-height: 54px;
-    padding: 14px 16px;
-    font-size: 1.02rem;
+    min-height: 62px;
+    padding: 16px 18px;
+    font-size: 1.18rem;
+  }
+
+  input::placeholder {
+    font-size: 1.12rem;
   }
 
   .field-help {
-    font-size: .95rem;
+    font-size: 1.08rem;
   }
 
   .field-error {
-    font-size: .9rem;
+    font-size: 1rem;
   }
 
   .selection-summary {
-    height: 54px;
-    font-size: 1rem;
+    height: 60px;
+    font-size: 1.14rem;
   }
 
   .municipality-toolbar > span,
   .selected-municipalities > span,
   .selected-municipalities button,
   .municipality-progress {
-    font-size: .94rem;
+    font-size: 1.06rem;
   }
 
   .municipality-grid button,
   .municipality-tabs button {
-    font-size: .98rem;
+    font-size: 1.12rem;
   }
 
   .plant-card {
-    padding: 28px;
+    padding: 30px;
   }
 
   .plant-card h3 {
-    font-size: 1.25rem;
+    font-size: 1.42rem;
   }
 
   .boolean-field legend {
-    font-size: 1rem;
+    font-size: 1.14rem;
   }
 
   .yes-no-options button {
-    min-height: 44px;
-    font-size: 1rem;
+    min-height: 48px;
+    font-size: 1.14rem;
   }
 
   .review-contact,
   .review-municipality,
   .review-plant {
-    font-size: 1rem;
+    font-size: 1.14rem;
   }
 
   .review-plant h3 {
-    font-size: 1.16rem;
+    font-size: 1.32rem;
   }
 
   .review-data-grid dt {
-    font-size: .82rem;
+    font-size: .94rem;
   }
 
   .review-data-grid dd {
-    font-size: 1rem;
+    font-size: 1.12rem;
   }
 
   .form-actions {
-    padding: 22px clamp(42px, 5vw, 76px);
+    padding: 24px clamp(48px, 5.2vw, 84px);
   }
 
   .primary-button,
   .secondary-button {
-    min-height: 50px;
-    padding: 12px 22px;
-    font-size: 1.05rem;
+    min-height: 56px;
+    padding: 13px 24px;
+    font-size: 1.2rem;
   }
 
   .error-message {
-    font-size: 1rem;
-    padding: 14px 16px;
+    font-size: 1.14rem;
+    padding: 16px 18px;
   }
 
   .consultation-view {
-    padding: 40px;
+    padding: 44px;
   }
 
   .consultation-title h3 {
-    font-size: 1.16rem;
+    font-size: 1.32rem;
   }
 
   .consultation-title span {
-    font-size: .9rem;
+    font-size: 1rem;
   }
 
   .access-state {
-    width: min(100%, 820px);
-    padding: 64px 58px;
+    width: min(100%, 860px);
+    padding: 68px 62px;
   }
 
   .access-state .access-error {
-    width: 84px;
-    height: 84px;
-    margin-bottom: 28px;
+    width: 88px;
+    height: 88px;
+    margin-bottom: 30px;
   }
 
   .access-state .access-error svg {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
   }
 
   .access-state .eyebrow {
-    font-size: .92rem;
+    font-size: 1.04rem;
     margin-bottom: 18px;
   }
 
   .access-state h1 {
-    font-size: clamp(3rem, 4vw, 4rem);
+    font-size: clamp(3.2rem, 4.2vw, 4.25rem);
     line-height: 1.08;
     margin: 8px 0 20px;
   }
 
   .access-state .lead {
-    font-size: 1.28rem;
+    font-size: 1.42rem;
     line-height: 1.55;
   }
 
   .access-state .access-help {
     margin-top: 28px;
-    font-size: 1.08rem;
+    font-size: 1.2rem;
     line-height: 1.55;
   }
 }
 
-/* En pantallas de escritorio de altura limitada, conserva todo visible sin reducir demasiado la letra. */
+/* En pantallas de escritorio de altura limitada, conserva todo visible sin volver la tipografía pequeña. */
 @media (min-width: 761px) and (max-height: 820px) {
   .brand-header {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 
   .brand-mark {
-    width: 126px;
-    height: 68px;
+    width: 132px;
+    height: 70px;
   }
 
   .steps {
