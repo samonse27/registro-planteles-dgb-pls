@@ -4,6 +4,26 @@ import { useEffect } from "react";
 
 export default function ModificationBridge() {
   useEffect(() => {
+    const resaltarPendientes = () => {
+      const esAlta = document.body.textContent?.includes("ALTA DE PLANTELES PLS");
+      if (!esAlta) return;
+
+      document.querySelectorAll<HTMLElement>(".review-data-grid dd").forEach((elemento) => {
+        const texto = elemento.textContent?.trim().toLowerCase() ?? "";
+        const pendiente = texto.startsWith("pendiente") || texto === "sin respuesta";
+
+        if (pendiente) {
+          elemento.style.fontWeight = "800";
+        } else {
+          elemento.style.removeProperty("font-weight");
+        }
+      });
+    };
+
+    const observador = new MutationObserver(resaltarPendientes);
+    observador.observe(document.body, { childList: true, subtree: true, characterData: true });
+    resaltarPendientes();
+
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const button = target?.closest("button");
@@ -35,7 +55,10 @@ export default function ModificationBridge() {
     };
 
     document.addEventListener("click", handleClick, true);
-    return () => document.removeEventListener("click", handleClick, true);
+    return () => {
+      observador.disconnect();
+      document.removeEventListener("click", handleClick, true);
+    };
   }, []);
 
   return null;
