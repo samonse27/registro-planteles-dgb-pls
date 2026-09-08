@@ -76,6 +76,7 @@ const vacio: FormularioPlantel = {
 
 const texto = (valor: unknown) => valor === null || valor === undefined ? "" : String(valor);
 const numeroOpcional = (valor: string) => valor.trim() === "" ? null : Number(valor);
+const textoComparable = (valor: unknown) => texto(valor).trim();
 
 const coordenadaValida = (valor: string, minimo: number, maximo: number) => {
   if (!valor.trim()) return true;
@@ -174,6 +175,41 @@ export default function ModificarPage() {
     setFormulario((actual) => ({ ...actual, [campo]: valor }));
   };
 
+  const obtenerCamposModificados = () => {
+    if (!plantelSeleccionado) return [] as string[];
+
+    const cambios: string[] = [];
+    const compararTexto = (actual: unknown, nuevo: unknown, etiqueta: string) => {
+      if (textoComparable(actual) !== textoComparable(nuevo)) cambios.push(etiqueta);
+    };
+    const compararBooleano = (actual: boolean | null | undefined, nuevo: boolean | null, etiqueta: string) => {
+      if ((actual ?? null) !== nuevo) cambios.push(etiqueta);
+    };
+
+    compararTexto(plantelSeleccionado.nombrePlantel, formulario.nombrePlantel, "Nombre del plantel");
+    compararTexto(plantelSeleccionado.direccion, formulario.direccionPlantel, "Dirección del plantel");
+    compararTexto(plantelSeleccionado.latitud, formulario.latitud, "Latitud");
+    compararTexto(plantelSeleccionado.longitud, formulario.longitud, "Longitud");
+    compararTexto(plantelSeleccionado.codigoPostal, formulario.codigoPostal, "Código Postal");
+    compararTexto(plantelSeleccionado.linkGoogleMaps, formulario.linkGoogleMaps, "Enlace de Google Maps");
+    compararTexto(plantelSeleccionado.aulasDidacticas, formulario.aulasDidacticas, "Aulas didácticas");
+    compararTexto(plantelSeleccionado.capacidadPorAula, formulario.capacidadPorAula, "Capacidad por aula");
+    compararTexto(plantelSeleccionado.capacidadInstalada, formulario.capacidadInstalada, "Capacidad instalada");
+    compararTexto(plantelSeleccionado.computadoras, formulario.computadoras, "Computadoras");
+    compararBooleano(plantelSeleccionado.agua, formulario.agua, "Agua");
+    compararBooleano(plantelSeleccionado.luz, formulario.luz, "Luz");
+    compararBooleano(plantelSeleccionado.internet, formulario.internet, "Internet");
+    compararBooleano(plantelSeleccionado.drenaje, formulario.drenaje, "Drenaje");
+    compararBooleano(plantelSeleccionado.equipoComputo, formulario.equipoComputo, "Aulas de cómputo");
+    compararBooleano(plantelSeleccionado.laboratorio, formulario.laboratorio, "Laboratorio");
+    compararBooleano(plantelSeleccionado.banos, formulario.banos, "Baños");
+    compararBooleano(plantelSeleccionado.espacioAdministrativo, formulario.espacioAdministrativo, "Espacio administrativo");
+    compararTexto(plantelSeleccionado.movilidad, formulario.movilidad, "Movilidad");
+    compararTexto(plantelSeleccionado.horario, formulario.horario, "Horario");
+
+    return cambios;
+  };
+
   const enviar = async () => {
     if (!plantelId) {
       setMensaje("Seleccione el plantel que desea actualizar.");
@@ -195,6 +231,12 @@ export default function ModificarPage() {
     }
     if (errorEnlaceGoogleMaps(formulario.linkGoogleMaps)) {
       setMensaje(errorEnlaceGoogleMaps(formulario.linkGoogleMaps));
+      return;
+    }
+
+    const camposModificados = obtenerCamposModificados();
+    if (camposModificados.length === 0) {
+      setMensaje("No se detectaron cambios en la información del plantel.");
       return;
     }
 
@@ -230,6 +272,7 @@ export default function ModificarPage() {
           movilidad: formulario.movilidad,
           horario: formulario.horario,
           motivo: "Actualización de datos del plantel",
+          camposModificados: camposModificados.join(", "),
           fechaSolicitud: new Date().toISOString(),
         }),
       });
