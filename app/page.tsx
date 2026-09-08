@@ -34,6 +34,8 @@ const nuevoPlantel = (): Plantel => ({
 const PASOS = ["Responsable", "Municipios", "Planteles", "Revisión"];
 
 const respuestaSiNo = (valor: boolean | null) => valor === true ? "Sí" : valor === false ? "No" : "Sin respuesta";
+const mostrarValor = (valor: string) => valor.trim() || "Pendiente de completar";
+const numeroOpcional = (valor: string) => valor.trim() === "" ? null : Number(valor);
 
 const coordenadaValida = (valor: string, minimo: number, maximo: number) => {
   if (!valor.trim()) return false;
@@ -143,17 +145,10 @@ export default function Home() {
   }));
 
   const plantelCompleto = (plantel: Plantel) => Boolean(
-    plantel.nombre.trim() && plantel.direccion.trim() &&
-    coordenadaValida(plantel.latitud, -90, 90) &&
-    coordenadaValida(plantel.longitud, -180, 180) && /^[0-9]{5}$/.test(plantel.codigoPostal) &&
-    !errorEnlaceGoogleMaps(plantel.linkGoogleMaps) && plantel.capacidadInstalada !== "" &&
-    plantel.aulasDidacticas !== "" &&
-    plantel.capacidadPorAula !== "" && plantel.computadoras !== "" &&
-    plantel.movilidad.trim() && plantel.horario.trim() &&
-    plantel.agua !== null && plantel.luz !== null && plantel.internet !== null &&
-    plantel.drenaje !== null && plantel.equipoComputo !== null &&
-    plantel.laboratorio !== null && plantel.banos !== null &&
-    plantel.espacioAdministrativo !== null
+    (!plantel.latitud.trim() || coordenadaValida(plantel.latitud, -90, 90)) &&
+    (!plantel.longitud.trim() || coordenadaValida(plantel.longitud, -180, 180)) &&
+    (!plantel.codigoPostal.trim() || /^[0-9]{5}$/.test(plantel.codigoPostal)) &&
+    (!plantel.linkGoogleMaps.trim() || !errorEnlaceGoogleMaps(plantel.linkGoogleMaps))
   );
 
   const municipioCompleto = (municipio: string) =>
@@ -225,10 +220,10 @@ export default function Home() {
               longitud: plantel.longitud,
               codigoPostal: plantel.codigoPostal,
               linkGoogleMaps: plantel.linkGoogleMaps,
-              aulasDidacticas: Number(plantel.aulasDidacticas),
-              capacidadPorAula: Number(plantel.capacidadPorAula),
-              capacidadInstalada: Number(plantel.capacidadInstalada),
-              computadoras: Number(plantel.computadoras),
+              aulasDidacticas: numeroOpcional(plantel.aulasDidacticas),
+              capacidadPorAula: numeroOpcional(plantel.capacidadPorAula),
+              capacidadInstalada: numeroOpcional(plantel.capacidadInstalada),
+              computadoras: numeroOpcional(plantel.computadoras),
               agua: plantel.agua,
               luz: plantel.luz,
               internet: plantel.internet,
@@ -389,16 +384,16 @@ export default function Home() {
               {municipioActivo && planteles[municipioActivo]?.map((plantel, indice) => <article className="plant-card" key={plantel.id}>
                 <div className="plant-card-header"><h3>Plantel {indice + 1} en {municipioActivo}</h3>{planteles[municipioActivo].length > 1 && <button type="button" className="icon-danger" onClick={() => eliminarPlantel(municipioActivo, plantel.id)} aria-label="Eliminar plantel"><Trash2 size={17} /></button>}</div>
                 <div className="field-grid">
-                  <label>Nombre del plantel <b>*</b><input required aria-invalid={mostrarErrores && !plantel.nombre.trim()} value={plantel.nombre} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "nombre", e.target.value)} /><span className="field-error">Falta capturar el nombre del plantel.</span></label>
-                  <label>Dirección del plantel <b>*</b><input required aria-invalid={mostrarErrores && !plantel.direccion.trim()} value={plantel.direccion} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "direccion", e.target.value)} /><span className="field-error">Falta capturar la dirección del plantel.</span></label>
-                  <label>Latitud <b>*</b><input required type="number" min={-90} max={90} step="any" aria-invalid={mostrarErrores && !coordenadaValida(plantel.latitud, -90, 90)} value={plantel.latitud} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "latitud", e.target.value)} placeholder="Ej. 19.432608" /><span className="field-error">Capture una latitud entre -90 y 90.</span></label>
-                  <label>Longitud <b>*</b><input required type="number" min={-180} max={180} step="any" aria-invalid={mostrarErrores && !coordenadaValida(plantel.longitud, -180, 180)} value={plantel.longitud} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "longitud", e.target.value)} placeholder="Ej. -99.133209" /><span className="field-error">Capture una longitud entre -180 y 180.</span></label>
-                  <label>Código Postal <b>*</b><input required inputMode="numeric" maxLength={5} pattern="[0-9]{5}" aria-invalid={mostrarErrores && !/^[0-9]{5}$/.test(plantel.codigoPostal)} value={plantel.codigoPostal} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "codigoPostal", e.target.value.replace(/\D/g, "").slice(0, 5))} placeholder="Ej. 06000" /><span className="field-error">Capture un Código Postal de 5 dígitos.</span></label>
+                  <label>Nombre del plantel <span className="optional-label">Opcional</span><input value={plantel.nombre} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "nombre", e.target.value)} /></label>
+                  <label>Dirección del plantel <span className="optional-label">Opcional</span><input value={plantel.direccion} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "direccion", e.target.value)} /></label>
+                  <label>Latitud <span className="optional-label">Opcional</span><input type="number" min={-90} max={90} step="any" aria-invalid={mostrarErrores && Boolean(plantel.latitud.trim()) && !coordenadaValida(plantel.latitud, -90, 90)} value={plantel.latitud} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "latitud", e.target.value)} placeholder="Ej. 19.432608" /><span className="field-error">Capture una latitud entre -90 y 90.</span></label>
+                  <label>Longitud <span className="optional-label">Opcional</span><input type="number" min={-180} max={180} step="any" aria-invalid={mostrarErrores && Boolean(plantel.longitud.trim()) && !coordenadaValida(plantel.longitud, -180, 180)} value={plantel.longitud} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "longitud", e.target.value)} placeholder="Ej. -99.133209" /><span className="field-error">Capture una longitud entre -180 y 180.</span></label>
+                  <label>Código Postal <span className="optional-label">Opcional</span><input inputMode="numeric" maxLength={5} pattern="[0-9]{5}" aria-invalid={mostrarErrores && Boolean(plantel.codigoPostal.trim()) && !/^[0-9]{5}$/.test(plantel.codigoPostal)} value={plantel.codigoPostal} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "codigoPostal", e.target.value.replace(/\D/g, "").slice(0, 5))} placeholder="Ej. 06000" /><span className="field-error">Capture un Código Postal de 5 dígitos.</span></label>
                   <div className="wide maps-field">
-                    <label>Enlace de Google Maps <b>*</b>
+                    <label>Enlace de Google Maps <span className="optional-label">Opcional</span>
                       <span className="field-help">Pegue el vínculo que obtiene al seleccionar <strong>Compartir</strong> en Google Maps; no escriba el domicilio.</span>
-                      <input required type="url" aria-invalid={mostrarErrores && Boolean(errorEnlaceGoogleMaps(plantel.linkGoogleMaps))} value={plantel.linkGoogleMaps} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "linkGoogleMaps", e.target.value)} onBlur={(e) => actualizarPlantel(municipioActivo, plantel.id, "linkGoogleMaps", e.target.value.trim())} placeholder="Ej. https://maps.app.goo.gl/..." />
-                      {mostrarErrores && errorEnlaceGoogleMaps(plantel.linkGoogleMaps) && <span className="field-error visible">{errorEnlaceGoogleMaps(plantel.linkGoogleMaps)}</span>}
+                      <input type="url" aria-invalid={mostrarErrores && Boolean(plantel.linkGoogleMaps.trim()) && Boolean(errorEnlaceGoogleMaps(plantel.linkGoogleMaps))} value={plantel.linkGoogleMaps} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "linkGoogleMaps", e.target.value)} onBlur={(e) => actualizarPlantel(municipioActivo, plantel.id, "linkGoogleMaps", e.target.value.trim())} placeholder="Ej. https://maps.app.goo.gl/..." />
+                      {mostrarErrores && plantel.linkGoogleMaps.trim() && errorEnlaceGoogleMaps(plantel.linkGoogleMaps) && <span className="field-error visible">{errorEnlaceGoogleMaps(plantel.linkGoogleMaps)}</span>}
                     </label>
                     <div className="maps-tools">
                       <details className="maps-guide">
@@ -432,14 +427,14 @@ export default function Home() {
                       {!errorEnlaceGoogleMaps(plantel.linkGoogleMaps) && <a className="verify-link" href={plantel.linkGoogleMaps.trim()} target="_blank" rel="noopener noreferrer"><ExternalLink size={15} /> Verificar enlace</a>}
                     </div>
                   </div>
-                  <label>Aulas didácticas <b>*</b><input required type="number" min="0" aria-invalid={mostrarErrores && plantel.aulasDidacticas === ""} value={plantel.aulasDidacticas} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "aulasDidacticas", e.target.value)} placeholder="Ej. 12" /><span className="field-error">Falta indicar la cantidad de aulas didácticas.</span></label>
-                  <label>Capacidad por aula <b>*</b><input required type="number" min="0" aria-invalid={mostrarErrores && plantel.capacidadPorAula === ""} value={plantel.capacidadPorAula} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "capacidadPorAula", e.target.value)} placeholder="Ej. 30" /><span className="field-error">Falta indicar la capacidad por aula.</span></label>
-                  <label>Capacidad instalada <b>*</b><input required type="number" min="0" step="1" aria-invalid={mostrarErrores && plantel.capacidadInstalada === ""} value={plantel.capacidadInstalada} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "capacidadInstalada", e.target.value)} placeholder="Ej. 450" /><span className="field-error">Falta indicar la capacidad instalada.</span></label>
-                  <label>Computadoras <b>*</b><input required type="number" min="0" aria-invalid={mostrarErrores && plantel.computadoras === ""} value={plantel.computadoras} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "computadoras", e.target.value)} placeholder="Ej. 25" /><span className="field-error">Falta indicar la cantidad de computadoras.</span></label>
-                  <label>Movilidad <b>*</b><input required aria-invalid={mostrarErrores && !plantel.movilidad.trim()} value={plantel.movilidad} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "movilidad", e.target.value)} placeholder="Ej. transporte público" /><span className="field-error">Falta capturar la información de movilidad.</span></label>
-                  <label>Horario <b>*</b><input required aria-invalid={mostrarErrores && !plantel.horario.trim()} value={plantel.horario} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "horario", e.target.value)} placeholder="Ej. 08:00 a 18:00" /><span className="field-error">Falta capturar el horario.</span></label>
+                  <label>Aulas didácticas <span className="optional-label">Opcional</span><input type="number" min="0" value={plantel.aulasDidacticas} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "aulasDidacticas", e.target.value)} placeholder="Ej. 12" /></label>
+                  <label>Capacidad por aula <span className="optional-label">Opcional</span><input type="number" min="0" value={plantel.capacidadPorAula} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "capacidadPorAula", e.target.value)} placeholder="Ej. 30" /></label>
+                  <label>Capacidad instalada <span className="optional-label">Opcional</span><input type="number" min="0" step="1" value={plantel.capacidadInstalada} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "capacidadInstalada", e.target.value)} placeholder="Ej. 450" /></label>
+                  <label>Computadoras <span className="optional-label">Opcional</span><input type="number" min="0" value={plantel.computadoras} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "computadoras", e.target.value)} placeholder="Ej. 25" /></label>
+                  <label>Movilidad <span className="optional-label">Opcional</span><input value={plantel.movilidad} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "movilidad", e.target.value)} placeholder="Ej. transporte público" /></label>
+                  <label>Horario <span className="optional-label">Opcional</span><input value={plantel.horario} onChange={(e) => actualizarPlantel(municipioActivo, plantel.id, "horario", e.target.value)} placeholder="Ej. 08:00 a 18:00" /></label>
                 </div>
-                <div className="switch-grid">{([['agua','Agua'],['luz','Luz'],['internet','Internet'],['drenaje','Drenaje'],['equipoComputo','Aulas de cómputo'],['laboratorio','Laboratorio'],['banos','Baños'],['espacioAdministrativo','Espacio administrativo']] as const).map(([campo, etiqueta]) => <fieldset tabIndex={-1} aria-invalid={mostrarErrores && plantel[campo] === null} className="boolean-field" key={campo}><legend>{etiqueta} <b>*</b></legend><div className="yes-no-options"><button type="button" className={plantel[campo] === true ? "selected" : ""} aria-pressed={plantel[campo] === true} onClick={() => actualizarPlantel(municipioActivo, plantel.id, campo, true)}>Sí</button><button type="button" className={plantel[campo] === false ? "selected" : ""} aria-pressed={plantel[campo] === false} onClick={() => actualizarPlantel(municipioActivo, plantel.id, campo, false)}>No</button></div>{mostrarErrores && plantel[campo] === null && <span className="field-error visible">Seleccione Sí o No.</span>}</fieldset>)}</div>
+                <div className="switch-grid">{([['agua','Agua'],['luz','Luz'],['internet','Internet'],['drenaje','Drenaje'],['equipoComputo','Aulas de cómputo'],['laboratorio','Laboratorio'],['banos','Baños'],['espacioAdministrativo','Espacio administrativo']] as const).map(([campo, etiqueta]) => <fieldset className="boolean-field" key={campo}><legend>{etiqueta} <span className="optional-label">Opcional</span></legend><div className="yes-no-options"><button type="button" className={plantel[campo] === true ? "selected" : ""} aria-pressed={plantel[campo] === true} onClick={() => actualizarPlantel(municipioActivo, plantel.id, campo, true)}>Sí</button><button type="button" className={plantel[campo] === false ? "selected" : ""} aria-pressed={plantel[campo] === false} onClick={() => actualizarPlantel(municipioActivo, plantel.id, campo, false)}>No</button></div></fieldset>)}</div>
               </article>)}
               {municipioActivo && <button type="button" className="add-button" onClick={() => agregarPlantel(municipioActivo)}><Plus size={17} /> Agregar otro plantel en {municipioActivo}</button>}
             </section>}
@@ -452,18 +447,18 @@ export default function Home() {
                 <summary><span><MapPin size={18} /><strong>{municipio}</strong></span><span>{planteles[municipio]?.length ?? 0} plantel(es) <ChevronDown size={18} /></span></summary>
                 <div className="review-municipality-body">
                   {planteles[municipio]?.map((plantel, indice) => <article className="review-plant" key={plantel.id}>
-                    <h3>Plantel {indice + 1}: {plantel.nombre}</h3>
+                    <h3>Plantel {indice + 1}: {plantel.nombre.trim() || "Sin nombre"}</h3>
                     <dl className="review-data-grid">
-                      <div className="wide"><dt>Dirección</dt><dd>{plantel.direccion}</dd></div>
-                      <div><dt>Latitud</dt><dd>{plantel.latitud}</dd></div>
-                      <div><dt>Longitud</dt><dd>{plantel.longitud}</dd></div>
-                      <div><dt>Código Postal</dt><dd>{plantel.codigoPostal}</dd></div>
-                      <div><dt>Aulas didácticas</dt><dd>{plantel.aulasDidacticas}</dd></div>
-                      <div><dt>Capacidad por aula</dt><dd>{plantel.capacidadPorAula}</dd></div>
-                      <div><dt>Capacidad instalada</dt><dd>{plantel.capacidadInstalada}</dd></div>
-                      <div><dt>Computadoras</dt><dd>{plantel.computadoras}</dd></div>
-                      <div><dt>Movilidad</dt><dd>{plantel.movilidad}</dd></div>
-                      <div><dt>Horario</dt><dd>{plantel.horario}</dd></div>
+                      <div className="wide"><dt>Dirección</dt><dd>{mostrarValor(plantel.direccion)}</dd></div>
+                      <div><dt>Latitud</dt><dd>{mostrarValor(plantel.latitud)}</dd></div>
+                      <div><dt>Longitud</dt><dd>{mostrarValor(plantel.longitud)}</dd></div>
+                      <div><dt>Código Postal</dt><dd>{mostrarValor(plantel.codigoPostal)}</dd></div>
+                      <div><dt>Aulas didácticas</dt><dd>{mostrarValor(plantel.aulasDidacticas)}</dd></div>
+                      <div><dt>Capacidad por aula</dt><dd>{mostrarValor(plantel.capacidadPorAula)}</dd></div>
+                      <div><dt>Capacidad instalada</dt><dd>{mostrarValor(plantel.capacidadInstalada)}</dd></div>
+                      <div><dt>Computadoras</dt><dd>{mostrarValor(plantel.computadoras)}</dd></div>
+                      <div><dt>Movilidad</dt><dd>{mostrarValor(plantel.movilidad)}</dd></div>
+                      <div><dt>Horario</dt><dd>{mostrarValor(plantel.horario)}</dd></div>
                       <div><dt>Agua</dt><dd>{respuestaSiNo(plantel.agua)}</dd></div>
                       <div><dt>Luz</dt><dd>{respuestaSiNo(plantel.luz)}</dd></div>
                       <div><dt>Internet</dt><dd>{respuestaSiNo(plantel.internet)}</dd></div>
@@ -472,7 +467,7 @@ export default function Home() {
                       <div><dt>Laboratorio</dt><dd>{respuestaSiNo(plantel.laboratorio)}</dd></div>
                       <div><dt>Baños</dt><dd>{respuestaSiNo(plantel.banos)}</dd></div>
                       <div><dt>Espacio administrativo</dt><dd>{respuestaSiNo(plantel.espacioAdministrativo)}</dd></div>
-                      <div className="wide"><dt>Enlace de Google Maps</dt><dd><a href={plantel.linkGoogleMaps} target="_blank" rel="noopener noreferrer">Abrir ubicación <ExternalLink size={14} /></a></dd></div>
+                      <div className="wide"><dt>Enlace de Google Maps</dt><dd>{plantel.linkGoogleMaps.trim() ? <a href={plantel.linkGoogleMaps} target="_blank" rel="noopener noreferrer">Abrir ubicación <ExternalLink size={14} /></a> : "Pendiente de completar"}</dd></div>
                     </dl>
                   </article>)}
                   <button type="button" className="edit-municipality-button" onClick={() => editarMunicipio(municipio)}>Editar planteles de {municipio}</button>
