@@ -425,7 +425,7 @@ export default function Home() {
       <section className="glass-card max-w-xl text-center">
         <div className="success-icon"><CheckCircle2 size={38} /></div>
         <p className="eyebrow">Registro concluido</p><h1>¡Muchas gracias!</h1>
-        <p className="lead">La solicitud de alta fue enviada correctamente y quedó pendiente de revisión.</p>
+        <p className="lead">La solicitud de alta fue enviada correctamente.</p>
         <div className="folio-box">Planteles registrados: <strong>{cantidadPlanteles}</strong></div>
         <button type="button" className="secondary-button success-return" onClick={volverAlMenu}>Volver al menú</button>
       </section>
