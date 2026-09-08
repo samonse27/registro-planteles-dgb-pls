@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowLeft, Check, LoaderCircle, ShieldAlert, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, CheckCircle2, LoaderCircle, ShieldAlert, Trash2 } from "lucide-react";
 
 type Plantel = {
   plantelId?: string;
@@ -22,6 +22,8 @@ export default function BajaPage() {
   const [confirmado, setConfirmado] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [cargando, setCargando] = useState(true);
+  const [enviando, setEnviando] = useState(false);
+  const [finalizado, setFinalizado] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
   const token = typeof window === "undefined"
@@ -87,9 +89,58 @@ export default function BajaPage() {
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   };
 
-  const simulacionBaja = () => {
-    setMensaje("La pantalla de baja quedó lista. En el siguiente paso conectaremos esta confirmación con Power Automate; todavía no se ha dado de baja ningún plantel.");
+  const confirmarBaja = async () => {
+    if (!plantelSeleccionado || !puedeContinuar || enviando) return;
+
+    setEnviando(true);
+    setMensaje("");
+
+    try {
+      const response = await fetch("/api/baja", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token,
+          plantelId: plantelSeleccionado.plantelId,
+          motivoBaja: motivo,
+          especificacionOtro: motivo === "Otro" ? otroMotivo.trim() : "",
+          fechaSolicitud: new Date().toISOString(),
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.ok) {
+        throw new Error(data?.mensaje || "No fue posible registrar la baja.");
+      }
+
+      setFinalizado(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setMensaje(error instanceof Error ? error.message : "No fue posible registrar la baja.");
+    } finally {
+      setEnviando(false);
+    }
   };
+
+  if (finalizado) {
+    return (
+      <main className="app-shell flex min-h-screen items-center justify-center p-5">
+        <section className="glass-card max-w-xl text-center">
+          <div className="success-icon"><CheckCircle2 size={38} /></div>
+          <p className="eyebrow">Baja registrada</p>
+          <h1>Plantel dado de baja</h1>
+          <p className="lead">El plantel fue marcado como inactivo y el movimiento quedó registrado en el historial.</p>
+          <button
+            type="button"
+            className="secondary-button success-return"
+            onClick={() => window.location.href = `/?token=${encodeURIComponent(token)}`}
+          >
+            Volver al menú
+          </button>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="app-shell min-h-screen px-4 py-8 md:px-8">
@@ -219,9 +270,9 @@ export default function BajaPage() {
                       <span className="mt-1 block text-sm">{plantelSeleccionado.municipio || "Sin municipio"}</span>
                       <span className="mt-1 block text-sm"><b>Motivo:</b> {motivo === "Otro" ? otroMotivo.trim() : motivo}</span>
                     </div>
-                    <p className="mt-4 text-sm leading-6 text-[#765966]">Esta confirmación todavía no ejecuta la baja mientras configuramos el flujo de Power Automate.</p>
+                    <p className="mt-4 text-sm leading-6 text-[#765966]">Al confirmar, el plantel se marcará como inactivo y el movimiento quedará registrado en el historial.</p>
                     <div className="mt-5 flex justify-end">
-                      <button type="button" onClick={simulacionBaja} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-0 bg-red-700 px-5 py-2.5 font-bold text-white hover:bg-red-800"><Trash2 size={18} /> Confirmar baja</button>
+                      <button type="button" onClick={confirmarBaja} disabled={enviando} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-0 bg-red-700 px-5 py-2.5 font-bold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"><Trash2 size={18} /> {enviando ? "Registrando baja…" : "Confirmar baja"}</button>
                     </div>
                   </section>
                 )}
