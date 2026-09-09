@@ -312,6 +312,7 @@ export default function ModificationBridge() {
       agregarMonitoreo();
       agregarSelectorEstadoNacional();
       actualizarTituloConsultaNacional();
+      abrirConsultaPendiente();
     };
 
     const observador = new MutationObserver(actualizarInterfaz);
