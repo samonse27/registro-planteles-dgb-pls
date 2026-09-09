@@ -2,9 +2,13 @@
 
 import { useEffect } from "react";
 
+type EstadoPermitido = { clave: string; nombre: string };
+
 export default function ModificationBridge() {
   useEffect(() => {
     let puedeVerMonitoreo = false;
+    let accesoNacional = false;
+    let estadosNacionales: EstadoPermitido[] = [];
 
     const resaltarPendientes = () => {
       const esAlta = document.body.textContent?.includes("ALTA DE PLANTELES PLS");
@@ -20,6 +24,59 @@ export default function ModificationBridge() {
           elemento.style.removeProperty("font-weight");
         }
       });
+    };
+
+    const agregarSelectorEstadoNacional = () => {
+      if (!accesoNacional || estadosNacionales.length === 0) return;
+      if (!document.body.textContent?.includes("Seleccione los municipios")) return;
+
+      const contenedor = document.querySelector<HTMLElement>(".two-columns");
+      if (!contenedor) return;
+
+      const etiqueta = contenedor.querySelector<HTMLLabelElement>("label");
+      if (!etiqueta || etiqueta.dataset.selectorNacional === "true") return;
+
+      const input = etiqueta.querySelector<HTMLInputElement>("input.locked-field");
+      if (!input) return;
+
+      etiqueta.dataset.selectorNacional = "true";
+      input.style.display = "none";
+
+      const texto = Array.from(etiqueta.childNodes).find((nodo) => nodo.nodeType === Node.TEXT_NODE);
+      if (texto) texto.textContent = "Estado ";
+
+      const requerido = document.createElement("b");
+      requerido.textContent = "*";
+      etiqueta.insertBefore(requerido, input);
+
+      const select = document.createElement("select");
+      select.setAttribute("aria-label", "Seleccione un estado");
+      select.style.width = "100%";
+      select.style.marginTop = "8px";
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Seleccione un estado";
+      select.appendChild(placeholder);
+
+      estadosNacionales.forEach((estado) => {
+        const option = document.createElement("option");
+        option.value = estado.clave;
+        option.textContent = estado.nombre;
+        select.appendChild(option);
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      select.value = params.get("estado") ?? "";
+
+      select.addEventListener("change", () => {
+        const nuevosParams = new URLSearchParams(window.location.search);
+        if (select.value) nuevosParams.set("estado", select.value);
+        else nuevosParams.delete("estado");
+        window.location.href = `${window.location.pathname}?${nuevosParams.toString()}`;
+      });
+
+      etiqueta.appendChild(select);
     };
 
     const agregarMonitoreo = () => {
@@ -71,15 +128,21 @@ export default function ModificationBridge() {
         });
         const data = await response.json();
         puedeVerMonitoreo = response.ok && data?.valido === true && data?.puedeVerMonitoreo === true;
+        accesoNacional = response.ok && data?.valido === true && data?.accesoNacional === true;
+        estadosNacionales = Array.isArray(data?.estados) ? data.estados : [];
         agregarMonitoreo();
+        agregarSelectorEstadoNacional();
       } catch {
         puedeVerMonitoreo = false;
+        accesoNacional = false;
+        estadosNacionales = [];
       }
     };
 
     const actualizarInterfaz = () => {
       resaltarPendientes();
       agregarMonitoreo();
+      agregarSelectorEstadoNacional();
     };
 
     const observador = new MutationObserver(actualizarInterfaz);
