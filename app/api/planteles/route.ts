@@ -102,7 +102,24 @@ export async function POST(request: Request) {
           .filter((plantel) => plantel.activo !== false)
       : [];
 
+    const estadoRespuesta = data.estado && typeof data.estado === "object"
+      ? data.estado as Record<string, unknown>
+      : {};
+    const esNacional = textoSeguro(estadoRespuesta.clave) === "00";
+
     let consultaEstado = typeof payload?.consultaEstado === "string" ? payload.consultaEstado.trim() : "";
+
+    if (!consultaEstado) {
+      const cookieHeader = request.headers.get("cookie") ?? "";
+      const cookieConsulta = cookieHeader
+        .split(";")
+        .map((parte) => parte.trim())
+        .find((parte) => parte.startsWith("consultaEstado="));
+      if (cookieConsulta) {
+        consultaEstado = decodeURIComponent(cookieConsulta.slice("consultaEstado=".length)).trim();
+      }
+    }
+
     if (!consultaEstado) {
       const referer = request.headers.get("referer") ?? "";
       try {
@@ -112,14 +129,14 @@ export async function POST(request: Request) {
       }
     }
 
-    if (consultaEstado && consultaEstado !== "todos") {
+    if (esNacional && consultaEstado && consultaEstado !== "todos") {
       planteles = planteles.filter((plantel) => plantel.claveEstado.trim() === consultaEstado);
     }
 
     return NextResponse.json({
       ...data,
       valido: data.valido !== false,
-      consultaEstado,
+      consultaEstado: esNacional ? consultaEstado : "",
       planteles,
     });
   } catch {
