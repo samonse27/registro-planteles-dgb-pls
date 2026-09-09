@@ -193,8 +193,12 @@ export default function ModificationBridge() {
           return;
         }
 
+        const nombreSeleccionado = select.options[select.selectedIndex]?.textContent?.trim() ?? "";
+        document.cookie = `consultaEstado=${encodeURIComponent(select.value)}; path=/; SameSite=Lax`;
+
         const nuevosParams = new URLSearchParams(window.location.search);
         nuevosParams.set("consultaEstado", select.value);
+        nuevosParams.set("consultaNombre", nombreSeleccionado);
         nuevosParams.set("abrirConsulta", "1");
         window.location.href = `${window.location.pathname}?${nuevosParams.toString()}`;
       });
@@ -213,11 +217,14 @@ export default function ModificationBridge() {
       if (!accesoNacional) return;
       if (!document.body.textContent?.includes("CONSULTA DE PLANTELES PLS")) return;
 
-      const valor = new URLSearchParams(window.location.search).get("consultaEstado") ?? "";
+      const params = new URLSearchParams(window.location.search);
+      const valor = params.get("consultaEstado") ?? "";
       if (!valor) return;
-      const nombre = valor === "todos"
+
+      const nombreEnUrl = params.get("consultaNombre")?.trim() ?? "";
+      const nombre = nombreEnUrl || (valor === "todos"
         ? "Todos los estados"
-        : estadosNacionales.find((estado) => estado.clave === valor)?.nombre;
+        : estadosNacionales.find((estado) => estado.clave === valor)?.nombre ?? "");
       if (!nombre) return;
 
       const titulo = document.querySelector<HTMLElement>(".consultation-view .portal-welcome h2");
