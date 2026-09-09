@@ -9,6 +9,7 @@ export default function ModificationBridge() {
     let puedeVerMonitoreo = false;
     let accesoNacional = false;
     let estadosNacionales: EstadoPermitido[] = [];
+    let permitirConsultaNacional = false;
 
     const resaltarPendientes = () => {
       const esAlta = document.body.textContent?.includes("ALTA DE PLANTELES PLS");
@@ -79,6 +80,157 @@ export default function ModificationBridge() {
       etiqueta.appendChild(select);
     };
 
+    const cerrarSelectorConsulta = () => {
+      document.querySelector<HTMLElement>('[data-selector-consulta-nacional="true"]')?.remove();
+    };
+
+    const mostrarSelectorConsulta = (botonConsulta: HTMLButtonElement) => {
+      if (!accesoNacional || estadosNacionales.length === 0) return;
+      cerrarSelectorConsulta();
+
+      const overlay = document.createElement("div");
+      overlay.dataset.selectorConsultaNacional = "true";
+      overlay.style.position = "fixed";
+      overlay.style.inset = "0";
+      overlay.style.zIndex = "9999";
+      overlay.style.display = "flex";
+      overlay.style.alignItems = "center";
+      overlay.style.justifyContent = "center";
+      overlay.style.padding = "24px";
+      overlay.style.background = "rgba(20, 25, 32, 0.48)";
+      overlay.style.backdropFilter = "blur(3px)";
+
+      const tarjeta = document.createElement("section");
+      tarjeta.style.width = "min(560px, 100%)";
+      tarjeta.style.background = "#ffffff";
+      tarjeta.style.borderRadius = "18px";
+      tarjeta.style.padding = "30px";
+      tarjeta.style.boxShadow = "0 24px 70px rgba(0,0,0,.22)";
+      tarjeta.style.border = "1px solid rgba(115, 64, 81, .14)";
+
+      const eyebrow = document.createElement("p");
+      eyebrow.textContent = "Consulta nacional";
+      eyebrow.style.margin = "0 0 8px";
+      eyebrow.style.fontSize = ".78rem";
+      eyebrow.style.fontWeight = "800";
+      eyebrow.style.letterSpacing = ".08em";
+      eyebrow.style.textTransform = "uppercase";
+      eyebrow.style.color = "#7e374d";
+
+      const titulo = document.createElement("h2");
+      titulo.textContent = "Seleccione el estado que desea consultar";
+      titulo.style.margin = "0 0 10px";
+      titulo.style.fontSize = "1.55rem";
+
+      const ayuda = document.createElement("p");
+      ayuda.textContent = "Puede consultar un estado específico o visualizar todos los planteles registrados a nivel nacional.";
+      ayuda.style.margin = "0 0 22px";
+      ayuda.style.color = "#5f6670";
+      ayuda.style.lineHeight = "1.55";
+
+      const select = document.createElement("select");
+      select.style.width = "100%";
+      select.style.minHeight = "48px";
+      select.style.padding = "0 14px";
+      select.style.border = "1px solid #cfd3d8";
+      select.style.borderRadius = "10px";
+      select.style.fontSize = "1rem";
+      select.style.background = "#fff";
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Seleccione un estado";
+      select.appendChild(placeholder);
+
+      const todos = document.createElement("option");
+      todos.value = "todos";
+      todos.textContent = "Todos los estados";
+      select.appendChild(todos);
+
+      estadosNacionales.forEach((estado) => {
+        const option = document.createElement("option");
+        option.value = estado.clave;
+        option.textContent = estado.nombre;
+        select.appendChild(option);
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      select.value = params.get("consultaEstado") ?? "";
+
+      const error = document.createElement("p");
+      error.textContent = "Seleccione una opción para continuar.";
+      error.style.display = "none";
+      error.style.margin = "8px 0 0";
+      error.style.color = "#a32222";
+      error.style.fontSize = ".9rem";
+
+      const acciones = document.createElement("div");
+      acciones.style.display = "flex";
+      acciones.style.justifyContent = "flex-end";
+      acciones.style.gap = "10px";
+      acciones.style.marginTop = "24px";
+
+      const cancelar = document.createElement("button");
+      cancelar.type = "button";
+      cancelar.textContent = "Cancelar";
+      cancelar.style.padding = "11px 18px";
+      cancelar.style.borderRadius = "10px";
+      cancelar.style.border = "1px solid #cfd3d8";
+      cancelar.style.background = "#fff";
+      cancelar.style.fontWeight = "700";
+      cancelar.addEventListener("click", cerrarSelectorConsulta);
+
+      const continuar = document.createElement("button");
+      continuar.type = "button";
+      continuar.textContent = "Continuar";
+      continuar.style.padding = "11px 20px";
+      continuar.style.borderRadius = "10px";
+      continuar.style.border = "0";
+      continuar.style.background = "#7e374d";
+      continuar.style.color = "#fff";
+      continuar.style.fontWeight = "800";
+      continuar.addEventListener("click", () => {
+        if (!select.value) {
+          error.style.display = "block";
+          select.focus();
+          return;
+        }
+
+        const nuevosParams = new URLSearchParams(window.location.search);
+        nuevosParams.set("consultaEstado", select.value);
+        window.history.replaceState({}, "", `${window.location.pathname}?${nuevosParams.toString()}`);
+        cerrarSelectorConsulta();
+        permitirConsultaNacional = true;
+        botonConsulta.click();
+      });
+
+      acciones.append(cancelar, continuar);
+      tarjeta.append(eyebrow, titulo, ayuda, select, error, acciones);
+      overlay.appendChild(tarjeta);
+      overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) cerrarSelectorConsulta();
+      });
+      document.body.appendChild(overlay);
+      select.focus();
+    };
+
+    const actualizarTituloConsultaNacional = () => {
+      if (!accesoNacional) return;
+      if (!document.body.textContent?.includes("CONSULTA DE PLANTELES PLS")) return;
+
+      const valor = new URLSearchParams(window.location.search).get("consultaEstado") ?? "";
+      if (!valor) return;
+      const nombre = valor === "todos"
+        ? "Todos los estados"
+        : estadosNacionales.find((estado) => estado.clave === valor)?.nombre;
+      if (!nombre) return;
+
+      const titulo = document.querySelector<HTMLElement>(".consultation-view .portal-welcome h2");
+      if (titulo && titulo.textContent !== `Planteles de ${nombre}`) {
+        titulo.textContent = `Planteles de ${nombre}`;
+      }
+    };
+
     const agregarMonitoreo = () => {
       if (!puedeVerMonitoreo) return;
       const grid = document.querySelector<HTMLElement>(".operation-grid");
@@ -132,6 +284,7 @@ export default function ModificationBridge() {
         estadosNacionales = Array.isArray(data?.estados) ? data.estados : [];
         agregarMonitoreo();
         agregarSelectorEstadoNacional();
+        actualizarTituloConsultaNacional();
       } catch {
         puedeVerMonitoreo = false;
         accesoNacional = false;
@@ -143,6 +296,7 @@ export default function ModificationBridge() {
       resaltarPendientes();
       agregarMonitoreo();
       agregarSelectorEstadoNacional();
+      actualizarTituloConsultaNacional();
     };
 
     const observador = new MutationObserver(actualizarInterfaz);
@@ -152,10 +306,21 @@ export default function ModificationBridge() {
 
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
-      const button = target?.closest("button");
+      const button = target?.closest("button") as HTMLButtonElement | null;
       if (!button) return;
 
       const text = button.textContent?.toLowerCase() ?? "";
+
+      if (accesoNacional && text.includes("consultar plantel")) {
+        if (permitirConsultaNacional) {
+          permitirConsultaNacional = false;
+        } else {
+          event.preventDefault();
+          event.stopPropagation();
+          mostrarSelectorConsulta(button);
+          return;
+        }
+      }
 
       if (
         text.includes("volver al menú") &&
@@ -184,6 +349,7 @@ export default function ModificationBridge() {
     document.addEventListener("click", handleClick, true);
     return () => {
       observador.disconnect();
+      cerrarSelectorConsulta();
       document.removeEventListener("click", handleClick, true);
     };
   }, []);
