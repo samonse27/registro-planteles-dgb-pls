@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+type EstadoPermitido = { clave: string; nombre: string };
+type MunicipioPermitido = { clave: string; nombre: string; claveEstado?: string };
+
 export async function POST(request: Request) {
   const powerAutomateUrl = process.env.POWER_AUTOMATE_VALIDATE_URL;
   if (!powerAutomateUrl) {
@@ -29,6 +32,44 @@ export async function POST(request: Request) {
       valido: false,
       mensaje: "No fue posible validar el enlace.",
     }));
+
+    if (
+      response.ok &&
+      data?.valido === true &&
+      String(data?.estado?.clave ?? "") === "00"
+    ) {
+      const estados: EstadoPermitido[] = Array.isArray(data.estados) ? data.estados : [];
+      const municipios: MunicipioPermitido[] = Array.isArray(data.municipios) ? data.municipios : [];
+      const referer = request.headers.get("referer") ?? "";
+      let claveSeleccionada = "";
+
+      try {
+        claveSeleccionada = referer ? new URL(referer).searchParams.get("estado")?.trim() ?? "" : "";
+      } catch {
+        claveSeleccionada = "";
+      }
+
+      const estadoSeleccionado = estados.find((item) => item.clave === claveSeleccionada);
+
+      if (estadoSeleccionado) {
+        return NextResponse.json(
+          {
+            ...data,
+            accesoNacional: true,
+            estado: estadoSeleccionado,
+            estados,
+            municipios: municipios.filter((item) => item.claveEstado === estadoSeleccionado.clave),
+          },
+          { status: response.status },
+        );
+      }
+
+      return NextResponse.json(
+        { ...data, accesoNacional: true, estados, municipios },
+        { status: response.status },
+      );
+    }
+
     return NextResponse.json(data, { status: response.status });
   } catch {
     return NextResponse.json(
