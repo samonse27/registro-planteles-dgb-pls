@@ -11,6 +11,48 @@ export default function ModificationBridge() {
     let estadosNacionales: EstadoPermitido[] = [];
     let permitirConsultaNacional = false;
 
+    const fetchOriginal = window.fetch.bind(window);
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const response = await fetchOriginal(input, init);
+      const url = typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input instanceof Request
+            ? input.url
+            : "";
+
+      if (!url.includes("/api/planteles") || !response.ok) return response;
+
+      try {
+        const data = await response.clone().json();
+        const consultaEstado = new URLSearchParams(window.location.search).get("consultaEstado")?.trim() ?? "";
+
+        if (!consultaEstado || consultaEstado === "todos" || !Array.isArray(data?.planteles)) {
+          return response;
+        }
+
+        const plantelesFiltrados = data.planteles.filter((plantel: Record<string, unknown>) =>
+          String(plantel?.claveEstado ?? plantel?.ClaveEstado ?? "").trim() === consultaEstado
+        );
+
+        const headers = new Headers(response.headers);
+        headers.delete("content-length");
+        headers.set("Content-Type", "application/json; charset=utf-8");
+
+        return new Response(
+          JSON.stringify({ ...data, planteles: plantelesFiltrados, consultaEstado }),
+          {
+            status: response.status,
+            statusText: response.statusText,
+            headers,
+          },
+        );
+      } catch {
+        return response;
+      }
+    };
+
     const resaltarPendientes = () => {
       const esAlta = document.body.textContent?.includes("ALTA DE PLANTELES PLS");
       if (!esAlta) return;
@@ -194,8 +236,6 @@ export default function ModificationBridge() {
         }
 
         const nombreSeleccionado = select.options[select.selectedIndex]?.textContent?.trim() ?? "";
-        document.cookie = `consultaEstado=${encodeURIComponent(select.value)}; path=/; SameSite=Lax`;
-
         const nuevosParams = new URLSearchParams(window.location.search);
         nuevosParams.set("consultaEstado", select.value);
         nuevosParams.set("consultaNombre", nombreSeleccionado);
@@ -337,6 +377,17 @@ export default function ModificationBridge() {
         }
       }
 
+      if (text.includes("volver al menú") && document.body.textContent?.includes("CONSULTA DE PLANTELES PLS")) {
+        event.preventDefault();
+        event.stopPropagation();
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token")?.trim() ?? "";
+        window.location.replace(token
+          ? `${window.location.pathname}?token=${encodeURIComponent(token)}`
+          : window.location.pathname);
+        return;
+      }
+
       if (text.includes("volver al menú") && document.body.textContent?.includes("Registro concluido")) {
         event.preventDefault();
         event.stopPropagation();
@@ -360,6 +411,7 @@ export default function ModificationBridge() {
 
     document.addEventListener("click", handleClick, true);
     return () => {
+      window.fetch = fetchOriginal;
       observador.disconnect();
       cerrarSelectorConsulta();
       document.removeEventListener("click", handleClick, true);
