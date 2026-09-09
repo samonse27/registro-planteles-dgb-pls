@@ -19,11 +19,8 @@ export default function ModificationBridge() {
         const texto = elemento.textContent?.trim().toLowerCase() ?? "";
         const pendiente = texto.startsWith("pendiente") || texto === "sin respuesta";
 
-        if (pendiente) {
-          elemento.style.fontWeight = "800";
-        } else {
-          elemento.style.removeProperty("font-weight");
-        }
+        if (pendiente) elemento.style.fontWeight = "800";
+        else elemento.style.removeProperty("font-weight");
       });
     };
 
@@ -84,7 +81,7 @@ export default function ModificationBridge() {
       document.querySelector<HTMLElement>('[data-selector-consulta-nacional="true"]')?.remove();
     };
 
-    const mostrarSelectorConsulta = (botonConsulta: HTMLButtonElement) => {
+    const mostrarSelectorConsulta = () => {
       if (!accesoNacional || estadosNacionales.length === 0) return;
       cerrarSelectorConsulta();
 
@@ -198,10 +195,8 @@ export default function ModificationBridge() {
 
         const nuevosParams = new URLSearchParams(window.location.search);
         nuevosParams.set("consultaEstado", select.value);
-        window.history.replaceState({}, "", `${window.location.pathname}?${nuevosParams.toString()}`);
-        cerrarSelectorConsulta();
-        permitirConsultaNacional = true;
-        botonConsulta.click();
+        nuevosParams.set("abrirConsulta", "1");
+        window.location.href = `${window.location.pathname}?${nuevosParams.toString()}`;
       });
 
       acciones.append(cancelar, continuar);
@@ -226,9 +221,7 @@ export default function ModificationBridge() {
       if (!nombre) return;
 
       const titulo = document.querySelector<HTMLElement>(".consultation-view .portal-welcome h2");
-      if (titulo && titulo.textContent !== `Planteles de ${nombre}`) {
-        titulo.textContent = `Planteles de ${nombre}`;
-      }
+      if (titulo && titulo.textContent !== `Planteles de ${nombre}`) titulo.textContent = `Planteles de ${nombre}`;
     };
 
     const agregarMonitoreo = () => {
@@ -268,6 +261,20 @@ export default function ModificationBridge() {
       grid.appendChild(boton);
     };
 
+    const abrirConsultaPendiente = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("abrirConsulta") !== "1") return;
+
+      const boton = Array.from(document.querySelectorAll<HTMLButtonElement>(".operation-grid button"))
+        .find((item) => item.textContent?.toLowerCase().includes("consultar plantel"));
+      if (!boton) return;
+
+      params.delete("abrirConsulta");
+      window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+      permitirConsultaNacional = true;
+      boton.click();
+    };
+
     const prepararPermisoMonitoreo = async () => {
       const token = new URLSearchParams(window.location.search).get("token")?.trim() ?? "";
       if (!token) return;
@@ -285,6 +292,7 @@ export default function ModificationBridge() {
         agregarMonitoreo();
         agregarSelectorEstadoNacional();
         actualizarTituloConsultaNacional();
+        abrirConsultaPendiente();
       } catch {
         puedeVerMonitoreo = false;
         accesoNacional = false;
@@ -312,20 +320,16 @@ export default function ModificationBridge() {
       const text = button.textContent?.toLowerCase() ?? "";
 
       if (accesoNacional && text.includes("consultar plantel")) {
-        if (permitirConsultaNacional) {
-          permitirConsultaNacional = false;
-        } else {
+        if (permitirConsultaNacional) permitirConsultaNacional = false;
+        else {
           event.preventDefault();
           event.stopPropagation();
-          mostrarSelectorConsulta(button);
+          mostrarSelectorConsulta();
           return;
         }
       }
 
-      if (
-        text.includes("volver al menú") &&
-        document.body.textContent?.includes("Registro concluido")
-      ) {
+      if (text.includes("volver al menú") && document.body.textContent?.includes("Registro concluido")) {
         event.preventDefault();
         event.stopPropagation();
         window.location.href = `${window.location.pathname}${window.location.search}`;
