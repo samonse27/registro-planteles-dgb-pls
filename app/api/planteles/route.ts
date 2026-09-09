@@ -21,6 +21,8 @@ const normalizarPlantel = (plantel: unknown) => {
   const p = plantel && typeof plantel === "object" ? plantel as Record<string, unknown> : {};
   return {
     plantelId: textoSeguro(p.plantelId ?? p.PlantelID ?? p.ID),
+    estado: textoSeguro(p.estado ?? p.Estado),
+    claveEstado: textoSeguro(p.claveEstado ?? p.ClaveEstado),
     municipio: textoSeguro(p.municipio ?? p.Municipio),
     nombrePlantel: textoSeguro(p.nombrePlantel ?? p.NombrePlantel ?? p.Title),
     direccion: textoSeguro(p.direccion ?? p.direccionPlantel ?? p.DireccionPlantel),
@@ -94,15 +96,28 @@ export async function POST(request: Request) {
       );
     }
 
-    const planteles = Array.isArray(data.planteles)
+    let planteles = Array.isArray(data.planteles)
       ? data.planteles
           .map(normalizarPlantel)
           .filter((plantel) => plantel.activo !== false)
       : [];
 
+    const referer = request.headers.get("referer") ?? "";
+    let consultaEstado = "";
+    try {
+      consultaEstado = referer ? new URL(referer).searchParams.get("consultaEstado")?.trim() ?? "" : "";
+    } catch {
+      consultaEstado = "";
+    }
+
+    if (consultaEstado && consultaEstado !== "todos") {
+      planteles = planteles.filter((plantel) => plantel.claveEstado === consultaEstado);
+    }
+
     return NextResponse.json({
       ...data,
       valido: data.valido !== false,
+      consultaEstado,
       planteles,
     });
   } catch {
