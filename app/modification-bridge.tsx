@@ -55,14 +55,30 @@ export default function ModificationBridge() {
 
     const resaltarPendientes = () => {
       const esAlta = document.body.textContent?.includes("ALTA DE PLANTELES PLS");
-      if (!esAlta) return;
+      const esConsulta = document.body.textContent?.includes("CONSULTA DE PLANTELES PLS");
+      if (!esAlta && !esConsulta) return;
 
       document.querySelectorAll<HTMLElement>(".review-data-grid dd").forEach((elemento) => {
         const texto = elemento.textContent?.trim().toLowerCase() ?? "";
         const pendiente = texto.startsWith("pendiente") || texto === "sin respuesta";
+        const recuadro = elemento.parentElement as HTMLElement | null;
 
         if (pendiente) elemento.style.fontWeight = "800";
         else elemento.style.removeProperty("font-weight");
+
+        if (!esConsulta || !recuadro) return;
+
+        if (pendiente) {
+          recuadro.style.background = "#fff6dd";
+          recuadro.style.borderColor = "rgba(165, 127, 44, 0.55)";
+          recuadro.style.boxShadow = "inset 0 0 0 1px rgba(165, 127, 44, 0.08)";
+          recuadro.style.transition = "background .18s ease, border-color .18s ease";
+        } else {
+          recuadro.style.removeProperty("background");
+          recuadro.style.removeProperty("border-color");
+          recuadro.style.removeProperty("box-shadow");
+          recuadro.style.removeProperty("transition");
+        }
       });
     };
 
