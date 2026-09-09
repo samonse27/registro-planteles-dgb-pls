@@ -102,16 +102,18 @@ export async function POST(request: Request) {
           .filter((plantel) => plantel.activo !== false)
       : [];
 
-    const referer = request.headers.get("referer") ?? "";
-    let consultaEstado = "";
-    try {
-      consultaEstado = referer ? new URL(referer).searchParams.get("consultaEstado")?.trim() ?? "" : "";
-    } catch {
-      consultaEstado = "";
+    let consultaEstado = typeof payload?.consultaEstado === "string" ? payload.consultaEstado.trim() : "";
+    if (!consultaEstado) {
+      const referer = request.headers.get("referer") ?? "";
+      try {
+        consultaEstado = referer ? new URL(referer).searchParams.get("consultaEstado")?.trim() ?? "" : "";
+      } catch {
+        consultaEstado = "";
+      }
     }
 
     if (consultaEstado && consultaEstado !== "todos") {
-      planteles = planteles.filter((plantel) => plantel.claveEstado === consultaEstado);
+      planteles = planteles.filter((plantel) => plantel.claveEstado.trim() === consultaEstado);
     }
 
     return NextResponse.json({
