@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./menu-scale.css";
 import ConsultaFilterBridge from "./consulta-filter-bridge";
+import LabelPatch from "./label-patch";
 import ModificationBridge from "./modification-bridge";
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className="antialiased"><ConsultaFilterBridge /><ModificationBridge />{children}</body>
+      <body className="antialiased"><ConsultaFilterBridge /><ModificationBridge /><LabelPatch />{children}</body>
     </html>
   );
 }
